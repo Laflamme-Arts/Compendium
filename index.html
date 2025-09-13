@@ -1,0 +1,276 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Altera Rules — Online-Ready Viewer</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#0b0c0f;color:#e6e6e6}
+header{padding:16px 20px;background:#12141a;border-bottom:1px solid #1e2230;position:sticky;top:0;z-index:10}
+h1{margin:0;font-size:20px;font-weight:700}
+.container{max-width:1100px;margin:0 auto;padding:16px 20px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{padding:8px 10px;border:1px solid #2a3042;border-radius:10px;background:#141821;cursor:pointer}
+.tab.active{background:#243048;border-color:#3c4d6b}
+.panel{display:none}
+.panel.active{display:block}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+input[type="text"]{flex:1;min-width:220px;padding:8px 10px;border-radius:8px;border:1px solid #2a3042;background:#0f131b;color:#e6e6e6}
+select{padding:8px 10px;border-radius:8px;border:1px solid #2a3042;background:#0f131b;color:#e6e6e6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.card{padding:12px;border:1px solid #2a3042;border-radius:12px;background:#111521}
+.card h3{margin:0 0 6px 0;font-size:16px}
+.badge{display:inline-block;padding:2px 8px;border:1px solid #3c4d6b;border-radius:999px;font-size:12px;color:#a9b7d0}
+.small{color:#a9b7d0;font-size:12px}
+footer{color:#93a0b6;font-size:12px;padding:20px;text-align:center}
+a{color:#a8c8ff;text-decoration:none}
+a:hover{text-decoration:underline}
+hr{border:none;border-top:1px solid #1e2230;margin:14px 0}
+.detail{white-space:pre-wrap;line-height:1.35}
+kbd{background:#0f131b;border:1px solid #2a3042;border-bottom-width:2px;padding:1px 6px;border-radius:6px;color:#cfd8e3}
+code{background:#0f131b;border:1px solid #2a3042;padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Altera Rules — Online‑Ready Viewer</h1>
+  <div class="small">Paste public CSV links into the CONFIG inside this file (top of the script). Then host this file anywhere (GitHub Pages works). If left blank, it uses the baked‑in snapshot.</div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab" data-panel="talents">Talents</div>
+    <div class="tab" data-panel="vocations">Vocations</div>
+    <div class="tab" data-panel="features">Features</div>
+    <div class="tab" data-panel="cultural_roots">Cultural Roots</div>
+    <div class="tab" data-panel="equipment">Equipment</div>
+  </div>
+
+  <div id="detail" class="card" style="margin-bottom:14px">
+    <h2 style="margin:0">Select an item to see details</h2>
+  </div>
+
+  <div id="talents" class="panel">
+    <div class="controls">
+      <input type="text" placeholder="Search talents…"/>
+      <select>
+        <option value="all">All types</option>
+        <option value="mental">mental</option>
+        <option value="physical">physical</option>
+        <option value="professional">professional</option>
+        <option value="passion">passion</option>
+      </select>
+    </div>
+    <div class="grid"></div>
+  </div>
+
+  <div id="vocations" class="panel">
+    <div class="controls">
+      <input type="text" placeholder="Search vocations…"/>
+    </div>
+    <div class="grid"></div>
+  </div>
+
+  <div id="features" class="panel">
+    <div class="controls">
+      <input type="text" placeholder="Search features…"/>
+    </div>
+    <div class="grid"></div>
+  </div>
+
+  <div id="cultural_roots" class="panel">
+    <div class="controls">
+      <input type="text" placeholder="Search cultural roots…"/>
+    </div>
+    <div class="grid"></div>
+  </div>
+
+  <div id="equipment" class="panel">
+    <div class="controls">
+      <input type="text" placeholder="Search equipment…"/>
+    </div>
+    <div class="grid"></div>
+  </div>
+
+  <hr/>
+  <footer>
+    This viewer can pull live data from your Google Sheets (published CSV). Paste the links in the CONFIG at the top of the script.
+  </footer>
+</div>
+
+<script>
+
+// ===== CONFIG =====
+// Paste public CSV URLs (Google Sheets "Publish to web" CSV links) or any raw CSV URLs.
+// Leave a field blank to use the baked-in snapshot for that dataset.
+const CONFIG = {
+  talents_csv: "",
+  vocations_csv: "",
+  features_csv: "",
+  cultural_roots_csv: "",
+  equipment_csv: ""
+};
+
+// ===== CSV PARSER (tiny) =====
+function parseCSV(text){
+  const lines = text.replace(/\r\n?/g,'\n').split('\n').filter(Boolean);
+  if(!lines.length) return [];
+  const headers = lines[0].split(',').map(h=>h.trim());
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cols = []; let cur = ''; let inQ = false;
+    const line = lines[i];
+    for(let j=0;j<line.length;j++){
+      const ch = line[j];
+      if(ch === '"'){
+        if(inQ && line[j+1] === '"'){ cur += '"'; j++; }
+        else { inQ = !inQ; }
+      } else if(ch === ',' && !inQ){
+        cols.push(cur); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    cols.push(cur);
+    const obj = {};
+    headers.forEach((h, idx)=> obj[h] = (cols[idx]||'').trim() );
+    rows.push(obj);
+  }
+  return rows;
+}
+
+// Helper to fetch CSV or fall back to snapshot
+async function getDataSet(name, url){
+  if(url){
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`Failed to fetch ${name}`);
+    const text = await res.text();
+    return parseCSV(text);
+  }
+  // fallback
+  return SNAPSHOT[name];
+}
+
+const SNAPSHOT = {"talents": [], "vocations": [], "features": [], "cultural_roots": [], "equipment": []};
+
+// Normalize keys: ensure expected columns exist
+function normalizeRows(rows){
+  return rows.map(r => ({
+    id_slug: r.id_slug || r.slug || r.Slug || r.ID || "",
+    name: r.name || r.Name || "",
+    type: r.type || r.Type || "",
+    overview_1line: r.overview_1line || r.Overview || r.Description || "",
+    vocation_id: r.vocation_id || r.vocation || r.Vocation || "",
+    feature_type: r.feature_type || r.FeatureType || "",
+    prereq_text: r.prereq_text || r.Prereq || "",
+    activation_text: r.activation_text || r.Activation || "",
+    effect_text: r.effect_text || r.Effect || "",
+    category: r.category || r.Category || "",
+    traits: r.traits || r.Traits || "",
+    notes: r.notes || r.Notes || "",
+    region: r.region || r.Region || "",
+    cost: r.cost || r.Cost || "",
+    weight: r.weight || r.Weight || ""
+  }));
+}
+
+function $(q, el=document){return el.querySelector(q)}
+function $all(q, el=document){return [...el.querySelectorAll(q)]}
+function normalizeStr(str){ return (str||'').toLowerCase() }
+
+function makeCard(item){
+  const h = document.createElement('div'); h.className='card';
+  const title = item.name || item.id_slug;
+  const subtitle = (item.type?`<span class="badge">${item.type}</span>`:'') +
+                   (item.vocation_id?` <span class="badge">vocation: ${item.vocation_id}</span>`:'') +
+                   (item.category?` <span class="badge">${item.category}</span>`:'');
+  const desc = item.overview_1line || item.effect_text || item.activation_text || item.prereq_text || item.notes || '';
+  h.innerHTML = `<h3>${title}</h3>${subtitle?'<div class="small" style="margin:6px 0">'+subtitle+'</div>':''}<div class="small">${desc || ''}</div>`;
+  h.onclick = ()=>showDetail(item);
+  return h;
+}
+
+function renderList(kind, DATA){
+  const panel = $("#" + kind);
+  const search = panel.querySelector('input[type="text"]');
+  const filter = panel.querySelector('select');
+  const grid = panel.querySelector('.grid');
+
+  function apply(){
+    const q = normalizeStr(search.value);
+    const f = filter ? filter.value : "";
+    let rows = DATA[kind] || [];
+    if(f && f !== "all"){
+      rows = rows.filter(r => (r.type||'') === f);
+    }
+    if(q){
+      rows = rows.filter(r => {
+        const blob = [r.id_slug, r.name, r.type, r.overview_1line, r.effect_text, r.activation_text, r.prereq_text, r.traits, r.notes, r.category, r.region].join(" ").toLowerCase();
+        return blob.includes(q);
+      });
+    }
+    grid.innerHTML = "";
+    rows.forEach(r => grid.appendChild(makeCard(r)));
+  }
+
+  search.addEventListener('input', apply);
+  if(filter) filter.addEventListener('change', apply);
+  apply();
+}
+
+function showDetail(item){
+  const side = $('#detail');
+  side.innerHTML = `
+    <h2 style="margin:0 0 6px 0">${item.name || item.id_slug}</h2>
+    ${item.type?`<div class="badge">${item.type}</div>`:''}
+    ${item.vocation_id?` <div class="badge">vocation: ${item.vocation_id}</div>`:''}
+    ${item.category?` <div class="badge">${item.category}</div>`:''}
+    <hr/>
+    <div class="detail"><b>Slug:</b> ${item.id_slug||''}</div>
+    ${item.overview_1line?`<div class="detail"><b>Overview:</b> ${item.overview_1line}</div>`:''}
+    ${item.prereq_text?`<div class="detail"><b>Prerequisites:</b> ${item.prereq_text}</div>`:''}
+    ${item.activation_text?`<div class="detail"><b>Activation:</b> ${item.activation_text}</div>`:''}
+    ${item.effect_text?`<div class="detail"><b>Effect:</b> ${item.effect_text}</div>`:''}
+    ${item.traits?`<div class="detail"><b>Traits:</b> ${item.traits}</div>`:''}
+    ${item.notes?`<div class="detail"><b>Notes:</b> ${item.notes}</div>`:''}
+    ${item.region?`<div class="detail"><b>Region:</b> ${item.region}</div>`:''}
+    ${item.cost?`<div class="detail"><b>Cost:</b> ${item.cost}</div>`:''}
+    ${item.weight?`<div class="detail"><b>Weight:</b> ${item.weight}</div>`:''}
+  `;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function initTabs(){
+  const tabs = $all('.tab');
+  tabs.forEach(t=>t.addEventListener('click', ()=>{
+    tabs.forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const id = t.dataset.panel;
+    $all('.panel').forEach(p=>p.classList.remove('active'));
+    $('#'+id).classList.add('active');
+  }));
+  tabs[0].click();
+}
+
+async function init(){
+  initTabs();
+
+  const datasets = {
+    talents: await getDataSet("talents", CONFIG.talents_csv),
+    vocations: await getDataSet("vocations", CONFIG.vocations_csv),
+    features: await getDataSet("features", CONFIG.features_csv),
+    cultural_roots: await getDataSet("cultural_roots", CONFIG.cultural_roots_csv),
+    equipment: await getDataSet("equipment", CONFIG.equipment_csv)
+  };
+
+  // Normalize & render
+  Object.keys(datasets).forEach(k => datasets[k] = normalizeRows(datasets[k]));
+  ['talents','vocations','features','cultural_roots','equipment'].forEach(kind => renderList(kind, datasets));
+}
+
+window.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
