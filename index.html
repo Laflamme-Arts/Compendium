@@ -57,4 +57,541 @@ h1{margin:0;font-size:20px;font-weight:700}
 
 /* Main container gets space for the sidebar */
 .container{flex:1;max-width:1100px;margin:0 auto;padding:16px 20px;margin-left:300px}
-.tabs{display:flex;gap:8px;flex-wrap:w
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#141821;cursor:pointer}
+.tab.active{background:#243048;border-color:#3c4d6b}
+.panel{display:none}
+.panel.active{display:block}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+input[type="text"]{flex:1;min-width:220px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--muted);color:var(--text)}
+select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--muted);color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.card{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.card h3{margin:0 0 6px 0;font-size:16px}
+.badge{display:inline-block;padding:2px 8px;border:1px solid #3c4d6b;border-radius:999px;font-size:12px;color:#a9b7d0}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.detail{white-space:pre-wrap;line-height:1.35}
+
+/* Glossary tooltip */
+.gloss{border-bottom:1px dashed #7da2ff;cursor:help;position:relative}
+.tooltip{position:absolute;left:0;top:100%;margin-top:6px;background:var(--muted);border:1px solid var(--border);border-radius:8px;padding:8px 10px;max-width:320px;z-index:999;
+         box-shadow:0 8px 24px rgba(0,0,0,.4); display:none; color:var(--text)}
+.gloss:hover .tooltip{display:block}
+
+/* Chapter content */
+.chapter{margin-bottom:24px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.chapter h2{margin:0 0 8px 0}
+.section{margin:10px 0;padding:10px;border:1px dashed var(--border);border-radius:10px;background:#0f0f16}
+.section h3{margin:0 0 6px 0}
+.hidden{display:none !important}
+
+/* Fixed small-print legal footer */
+#legalFooter{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:#0d0f14;border-top:1px solid var(--line);
+  padding:6px 12px;font-size:10px;line-height:1.3;color:#9aa3b2;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="siteTitle">ALTERA Basic Rules Compendium</h1>
+</header>
+
+<div class="app">
+  <aside id="chaptersSidebar">
+    <h2>Chapters</h2>
+    <div class="small">Add BookChapters/BookSections CSV links in CONFIG to populate.</div>
+  </aside>
+
+  <main class="container">
+    <div class="tabs">
+      <div class="tab active" data-panel="chapters" onclick="selectTab('chapters')">Chapters</div>
+      <div class="tab" data-panel="talents" onclick="selectTab('talents')">Talents</div>
+      <div class="tab" data-panel="vocations" onclick="selectTab('vocations')">Vocations</div>
+      <div class="tab" data-panel="features" onclick="selectTab('features')">Features</div>
+      <div class="tab" data-panel="cultural_roots" onclick="selectTab('cultural_roots')">Cultural Roots</div>
+      <div class="tab" data-panel="equipment" onclick="selectTab('equipment')">Equipment</div>
+    </div>
+
+    <div id="detail" class="card" style="margin-bottom:14px">
+      <h2 style="margin:0">Select an item to see details</h2>
+    </div>
+
+    <!-- Chapters panel -->
+    <div id="chapters" class="panel active">
+      <div class="controls">
+        <input id="chapSearch" type="text" placeholder="Search in chapter/section text…"/>
+      </div>
+      <div id="chaptersContent"></div>
+    </div>
+
+    <!-- Talents -->
+    <div id="talents" class="panel">
+      <div class="controls">
+        <input type="text" placeholder="Search talents…"/>
+        <select>
+          <option value="all">All types</option>
+          <option value="mental">mental</option>
+          <option value="physical">physical</option>
+          <option value="professional">professional</option>
+          <option value="passion">passion</option>
+        </select>
+      </div>
+
+      <!-- Selecting talents (four dropdowns by type) -->
+      <div id="selecting-talents" class="card" style="margin-bottom:12px">
+        <h2 style="margin:0 0 8px 0">Selecting talents</h2>
+        <div class="grid" id="talent-selectors">
+          <div class="card">
+            <label><b>Mental</b></label>
+            <select id="sel-mental"><option value="">Choose a talent…</option></select>
+            <div class="small" id="detail-mental" style="margin-top:6px"></div>
+          </div>
+          <div class="card">
+            <label><b>Physical</b></label>
+            <select id="sel-physical"><option value="">Choose a talent…</option></select>
+            <div class="small" id="detail-physical" style="margin-top:6px"></div>
+          </div>
+          <div class="card">
+            <label><b>Professional</b></label>
+            <select id="sel-professional"><option value="">Choose a talent…</option></select>
+            <div class="small" id="detail-professional" style="margin-top:6px"></div>
+          </div>
+          <div class="card">
+            <label><b>Passion</b></label>
+            <select id="sel-passion"><option value="">Choose a talent…</option></select>
+            <div class="small" id="detail-passion" style="margin-top:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid"></div>
+    </div>
+
+    <!-- Vocations -->
+    <div id="vocations" class="panel">
+      <div class="controls">
+        <input type="text" placeholder="Search vocations…"/>
+      </div>
+      <div class="grid"></div>
+    </div>
+
+    <!-- Features -->
+    <div id="features" class="panel">
+      <div class="controls">
+        <input type="text" placeholder="Search features…"/>
+      </div>
+      <div class="grid"></div>
+    </div>
+
+    <!-- Cultural Roots -->
+    <div id="cultural_roots" class="panel">
+      <div class="controls">
+        <input type="text" placeholder="Search cultural roots…"/>
+      </div>
+      <div class="grid"></div>
+    </div>
+
+    <!-- Equipment -->
+    <div id="equipment" class="panel">
+      <div class="controls">
+        <input type="text" placeholder="Search equipment…"/>
+      </div>
+      <div class="grid"></div>
+    </div>
+
+    <hr/>
+  </main>
+</div>
+
+<!-- Fixed small-print legal footer -->
+<div id="legalFooter">
+  ALTERA, Basic Rules, Laflamme Arts, and all other Laflamme Arts product names, and their respective logos are trademarks of Laflamme Arts
+  in Canada, the USA and other countries. All characters and their distinctive likenesses are the property of Laflamme Arts Inc.
+  This material is protected under the copyright laws of Canada. Any reproduction or unauthorized use of the material or artwork contained
+  herein is prohibited without the express written permission of Laflamme Arts Inc.
+</div>
+
+<script>
+// =================== CONFIG ===================
+// Paste your Google Sheets "Publish to the web" CSV links here (once).
+const CONFIG = {
+  // Book structure (drives sidebar + chapter/section page)
+  chapters_csv: "",     // BookChapters tab CSV
+  sections_csv: "",     // BookSections tab CSV
+
+  // Game data (cards)
+  talents_csv: "",
+  vocations_csv: "",
+  features_csv: "",
+  cultural_roots_csv: "",
+  equipment_csv: "",
+
+  // Hover definitions
+  glossary_csv: "",
+
+  // Optional theme (overrides colors/title/logo)
+  theme_csv: ""         // Theme tab: key,value (site_title, brand_color, bg_color, text_color, logo_url)
+};
+// ==============================================
+
+// Measure header/footer and set CSS vars so sidebar never overlaps the footer.
+function updateLayoutVars(){
+  const root = document.documentElement;
+  const header = document.querySelector('header');
+  const footer = document.getElementById('legalFooter');
+  if(header) root.style.setProperty('--header-h', header.offsetHeight + 'px');
+  if(footer) root.style.setProperty('--legal-h', footer.offsetHeight + 'px');
+}
+window.addEventListener('load', updateLayoutVars);
+window.addEventListener('resize', updateLayoutVars);
+
+// CSV parser
+function parseCSV(text){
+  const lines = text.replace(/\r\n?/g,'\n').split('\n').filter(l=>l!=='');
+  if(!lines.length) return [];
+  const headers = splitCSVLine(lines[0]);
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cols = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h, idx)=> obj[h] = (cols[idx] ?? "").trim());
+    rows.push(obj);
+  }
+  return rows;
+}
+function splitCSVLine(line){
+  const out=[]; let cur=""; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='\"'){
+      if(inQ && line[i+1]==='\"'){ cur+='\"'; i++; }
+      else inQ=!inQ;
+    } else if(ch===',' && !inQ){
+      out.push(cur); cur="";
+    } else cur+=ch;
+  }
+  out.push(cur);
+  return out;
+}
+async function fetchCSV(url){
+  const res = await fetch(url, {cache:'no-store'});
+  if(!res.ok) throw new Error("Failed to fetch CSV");
+  return parseCSV(await res.text());
+}
+
+function $(q, el=document){ return el.querySelector(q) }
+function $all(q, el=document){ return [...el.querySelectorAll(q)] }
+function escRe(s){ return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); }
+
+// ===== Glossary =====
+let GLOSSARY = [];
+function normalizeGlossary(rows){
+  return rows.map(r=>({term:(r.term||r.Term||"").trim(), definition:(r.definition||r.Definition||"").trim()}))
+             .filter(x=>x.term && x.definition);
+}
+function applyGlossary(html){
+  if(!html) return "";
+  let out = html;
+  GLOSSARY.forEach(({term, definition})=>{
+    const re = new RegExp(`\\b(${escRe(term)})\\b`, 'gi');
+    out = out.replace(re, m => `<span class="gloss">${m}<span class="tooltip">${definition}</span></span>`);
+  });
+  return out;
+}
+
+// ===== Theme =====
+function applyTheme(themeList){
+  const T = {};
+  themeList.forEach(r => { T[(r.key||r.Key||"").trim()] = (r.value||r.Value||"").trim(); });
+  if(T.site_title) { document.title = T.site_title; $('#siteTitle').textContent = T.site_title; }
+  if(T.logo_url){
+    let img = document.createElement('img'); img.className='logo'; img.src=T.logo_url; img.alt='logo';
+    const header = document.querySelector('header');
+    header.insertBefore(img, header.firstChild);
+  }
+  const root = document.documentElement;
+  if(T.brand_color) root.style.setProperty('--brand', T.brand_color);
+  if(T.bg_color) root.style.setProperty('--bg', T.bg_color);
+  if(T.text_color) root.style.setProperty('--text', T.text_color);
+}
+
+// ===== Book data =====
+function normalizeChapters(rows){
+  return rows.map(r => ({
+    chapter_slug: (r.chapter_slug||"").trim(),
+    chapter_number: (r.chapter_number||"").trim(),
+    chapter_title: (r.chapter_title||"").trim(),
+    short_title: (r.short_title||"").trim() || (r.chapter_title||"").trim(),
+    intro_text: (r.intro_text||"").trim(),
+    order: Number(r.order||0) || 0
+  })).filter(r=>r.chapter_slug);
+}
+function normalizeSections(rows){
+  return rows.map(r => ({
+    section_slug: (r.section_slug||"").trim(),
+    chapter_slug: (r.chapter_slug||"").trim(),
+    section_number: (r.section_number||"").trim(),
+    section_title: (r.section_title||"").trim(),
+    body_text: (r.body_text||"").trim(),
+    order: Number(r.order||0) || 0,
+    ui_hint: (r.ui_hint||"static").trim().toLowerCase()
+  })).filter(r=>r.section_slug && r.chapter_slug);
+}
+
+// ===== Game lists =====
+function normList(rows){
+  return rows.map(r => ({
+    id_slug: r.id_slug || r.slug || r.Slug || r.ID || "",
+    name: r.name || r.Name || "",
+    type: (r.type || r.Type || "").toLowerCase(),
+    overview_1line: r.overview_1line || r.Overview || r.Description || "",
+    vocation_id: r.vocation_id || r.vocation || r.Vocation || "",
+    feature_type: r.feature_type || r.FeatureType || "",
+    prereq_text: r.prereq_text || r.Prereq || "",
+    activation_text: r.activation_text || r.Activation || "",
+    effect_text: r.effect_text || r.Effect || "",
+    category: r.category || r.Category || "",
+    traits: r.traits || r.Traits || "",
+    notes: r.notes || r.Notes || "",
+    region: r.region || r.Region || "",
+    cost: r.cost || r.Cost || "",
+    weight: r.weight || r.Weight || "",
+    is_flaw: (r.is_flaw || r.flaw || "").toString().trim().toLowerCase()
+  }));
+}
+
+// ===== Rendering helpers =====
+function selectTab(id){
+  $all('.tab').forEach(t => t.classList.toggle('active', t.dataset.panel===id));
+  $all('.panel').forEach(p => p.classList.toggle('active', p.id===id));
+  if(id==='chapters') window.scrollTo({top:0, behavior:'smooth'});
+}
+function makeCard(item){
+  const div = document.createElement('div'); div.className='card';
+  const title = applyGlossary(item.name || item.id_slug);
+  const subtitle = (item.type?`<span class="badge">${item.type}</span>`:'') +
+                   (item.vocation_id?` <span class="badge">vocation: ${item.vocation_id}</span>`:'') +
+                   (item.category?` <span class="badge">${item.category}</span>`:'') +
+                   (item.is_flaw==='yes'?` <span class="badge">flaw</span>`:'');
+  const descRaw = item.overview_1line || item.effect_text || item.activation_text || item.prereq_text || item.notes || '';
+  const desc = applyGlossary(descRaw);
+  div.innerHTML = `<h3>${title}</h3>${subtitle?'<div class="small" style="margin:6px 0">'+subtitle+'</div>':''}<div class="small">${desc||''}</div>`;
+  div.onclick = ()=> showDetails(item);
+  return div;
+}
+function showDetails(item){
+  const d = document.getElementById('detail');
+  d.innerHTML = `
+    <h2 style="margin:0 0 6px 0">${applyGlossary(item.name||item.id_slug)}</h2>
+    ${item.type?`<div class="badge">${item.type}</div>`:''}
+    ${item.vocation_id?` <div class="badge">vocation: ${item.vocation_id}</div>`:''}
+    ${item.category?` <div class="badge">${item.category}</div>`:''}
+    ${item.is_flaw==='yes'?` <div class="badge">flaw</div>`:''}
+    <hr/>
+    <div class="detail"><b>Slug:</b> ${item.id_slug||''}</div>
+    ${item.overview_1line?`<div class="detail"><b>Overview:</b> ${applyGlossary(item.overview_1line)}</div>`:''}
+    ${item.prereq_text?`<div class="detail"><b>Prerequisites:</b> ${applyGlossary(item.prereq_text)}</div>`:''}
+    ${item.activation_text?`<div class="detail"><b>Activation:</b> ${applyGlossary(item.activation_text)}</div>`:''}
+    ${item.effect_text?`<div class="detail"><b>Effect:</b> ${applyGlossary(item.effect_text)}</div>`:''}
+    ${item.traits?`<div class="detail"><b>Traits:</b> ${applyGlossary(item.traits)}</div>`:''}
+    ${item.notes?`<div class="detail"><b>Notes:</b> ${applyGlossary(item.notes)}</div>`:''}
+    ${item.region?`<div class="detail"><b>Region:</b> ${item.region}</div>`:''}
+    ${item.cost?`<div class="detail"><b>Cost:</b> ${item.cost}</div>`:''}
+    ${item.weight?`<div class="detail"><b>Weight:</b> ${item.weight}</div>`:''}
+  `;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ===== Chapters page =====
+function renderChapters(chapters, sections){
+  // Sidebar
+  const side = document.getElementById('chaptersSidebar');
+  side.innerHTML = '<h2>Chapters</h2>';
+  chapters.sort((a,b)=>a.order-b.order).forEach(ch => {
+    const det = document.createElement('details');
+    det.open = true;
+    det.innerHTML = `<summary>${ch.chapter_number?`Chapter ${ch.chapter_number} — `:''}${ch.short_title||ch.chapter_title}</summary>`;
+    const secs = sections.filter(s => s.chapter_slug===ch.chapter_slug).sort((a,b)=>a.order-b.order);
+    secs.forEach(s => {
+      const a = document.createElement('a');
+      a.href = `#sec/${s.section_slug}`;
+      a.textContent = `${s.section_number? s.section_number+' ' : ''}${s.section_title}`;
+      det.appendChild(a);
+    });
+    side.appendChild(det);
+  });
+
+  // Content
+  const wrap = document.getElementById('chaptersContent');
+  wrap.innerHTML = '';
+  chapters.forEach(ch => {
+    const chDiv = document.createElement('article'); chDiv.className='chapter';
+    chDiv.id = `chap-${ch.chapter_slug}`;
+    chDiv.innerHTML = `
+      <h2>${ch.chapter_number?`Chapter ${ch.chapter_number} — `:''}${applyGlossary(ch.chapter_title)}</h2>
+      ${ch.intro_text?`<div class="detail">${applyGlossary(ch.intro_text)}</div>`:''}
+    `;
+    const secs = sections.filter(s => s.chapter_slug===ch.chapter_slug).sort((a,b)=>a.order-b.order);
+    secs.forEach(s => {
+      const sDiv = document.createElement('section'); sDiv.className='section';
+      sDiv.id = `sec-${s.section_slug}`;
+      const bodyHtml = applyGlossary((s.body_text||"").replace(/\n/g,'\n'));
+      sDiv.innerHTML = `
+        <h3>${s.section_number? s.section_number+' ' : ''}${applyGlossary(s.section_title)}</h3>
+        <div class="detail">${bodyHtml||''}</div>
+      `;
+      chDiv.appendChild(sDiv);
+    });
+    wrap.appendChild(chDiv);
+  });
+}
+
+function filterChapters(query){
+  const q = (query||'').toLowerCase();
+  const secs = [...document.querySelectorAll('.section')];
+  if(!q){ secs.forEach(s => s.classList.remove('hidden')); return; }
+  secs.forEach(s => {
+    const text = s.textContent.toLowerCase();
+    if(text.includes(q)) s.classList.remove('hidden'); else s.classList.add('hidden');
+  });
+}
+
+// ===== Talent selectors (four dropdowns by type) =====
+function initTalentSelectors(talents){
+  const group = { mental:[], physical:[], professional:[], passion:[] };
+  talents.forEach(t => {
+    const type = (t.type||'').toLowerCase();
+    if(group[type]) group[type].push(t);
+  });
+  Object.keys(group).forEach(k => group[k].sort((a,b)=> (a.name||'').localeCompare(b.name||'')));
+
+  function fill(id, items, detailId){
+    const sel = document.getElementById(id);
+    const box = document.getElementById(detailId);
+    if(!sel || !box) return;
+    sel.innerHTML = '<option value="">Choose a talent…</option>' + items.map(t => `<option value="${t.id_slug}">${t.name}</option>`).join('');
+    sel.onchange = () => {
+      const slug = sel.value;
+      if(!slug){ box.innerHTML=''; return; }
+      const t = items.find(x => x.id_slug===slug);
+      if(!t){ box.innerHTML=''; return; }
+      box.innerHTML = `<b>${t.name}</b><div>${applyGlossary(t.overview_1line||'')}</div>`;
+    };
+  }
+
+  fill('sel-mental', group.mental, 'detail-mental');
+  fill('sel-physical', group.physical, 'detail-physical');
+  fill('sel-professional', group.professional, 'detail-professional');
+  fill('sel-passion', group.passion, 'detail-passion');
+}
+
+// ===== Hash routing =====
+function handleHash(){
+  const h = location.hash.slice(1);
+  if(!h) return;
+  const [kind, slug] = h.split('/');
+  if(kind==='sec'){
+    selectTab('chapters');
+    const el = document.getElementById('sec-'+slug);
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+  } else if(kind==='chap'){
+    selectTab('chapters');
+    const el = document.getElementById('chap-'+slug);
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+  }
+}
+window.addEventListener('hashchange', handleHash);
+
+// ===== Main init =====
+async function init(){
+  updateLayoutVars(); // set initial header/footer sizes
+
+  // Theme (optional)
+  if(CONFIG.theme_csv){
+    try { applyTheme(await fetchCSV(CONFIG.theme_csv)); updateLayoutVars(); } catch(e){ console.warn('Theme not loaded', e); }
+  }
+  // Glossary (optional)
+  if(CONFIG.glossary_csv){
+    try { GLOSSARY = normalizeGlossary(await fetchCSV(CONFIG.glossary_csv)); } catch(e){ console.warn('Glossary not loaded', e); }
+  }
+
+  // Book
+  let chapters=[], sections=[];
+  try { if(CONFIG.chapters_csv) chapters = normalizeChapters(await fetchCSV(CONFIG.chapters_csv)); } catch(e){ console.error('Chapters load error', e); }
+  try { if(CONFIG.sections_csv) sections = normalizeSections(await fetchCSV(CONFIG.sections_csv)); } catch(e){ console.error('Sections load error', e); }
+  if(chapters.length || sections.length) renderChapters(chapters, sections);
+
+  // Game data
+  const datasets = {};
+  async function load(name, url){ if(!url) return []; try{ return await fetchCSV(url); }catch(e){ console.warn(name,'load error'); return []; } }
+  datasets.talents = normList(await load('talents', CONFIG.talents_csv));
+  datasets.vocations = normList(await load('vocations', CONFIG.vocations_csv));
+  datasets.features = normList(await load('features', CONFIG.features_csv));
+  datasets.cultural_roots = normList(await load('cultural_roots', CONFIG.cultural_roots_csv));
+  datasets.equipment = normList(await load('equipment', CONFIG.equipment_csv));
+
+  // Render talents grid & selectors
+  (function renderTalents(){
+    const panel = document.getElementById('talents');
+    const grid = panel.querySelector('.grid');
+    const search = panel.querySelector('input[type="text"]');
+    const filter = panel.querySelector('select');
+    function apply(){
+      const q = (search.value||'').toLowerCase();
+      const f = filter ? filter.value : '';
+      let rows = datasets.talents || [];
+      if(f && f!=='all') rows = rows.filter(r => (r.type||'')===f);
+      if(q){
+        rows = rows.filter(r => {
+          const blob = [r.id_slug,r.name,r.type,r.overview_1line,r.effect_text,r.activation_text,r.prereq_text,r.traits,r.notes,r.category,r.region].join(' ').toLowerCase();
+          return blob.includes(q);
+        });
+      }
+      grid.innerHTML='';
+      rows.forEach(r => grid.appendChild(makeCard(r)));
+    }
+    search.addEventListener('input', apply);
+    if(filter) filter.addEventListener('change', apply);
+    apply();
+
+    // Init the four dropdowns for "Selecting talents"
+    initTalentSelectors(datasets.talents);
+  })();
+
+  // Other lists (unchanged)
+  function renderList(kind){
+    const panel = document.getElementById(kind);
+    const grid = panel.querySelector('.grid');
+    const search = panel.querySelector('input[type="text"]');
+    const filter = panel.querySelector('select');
+    function apply(){
+      const q = (search.value||'').toLowerCase();
+      const f = filter ? filter.value : '';
+      let rows = datasets[kind] || [];
+      if(f && f!=='all') rows = rows.filter(r => (r.type||'')===f);
+      if(q){
+        rows = rows.filter(r => {
+          const blob = [r.id_slug,r.name,r.type,r.overview_1line,r.effect_text,r.activation_text,r.prereq_text,r.traits,r.notes,r.category,r.region].join(' ').toLowerCase();
+          return blob.includes(q);
+        });
+      }
+      grid.innerHTML='';
+      rows.forEach(r => grid.appendChild(makeCard(r)));
+    }
+    search.addEventListener('input', apply);
+    if(filter) filter.addEventListener('change', apply);
+    apply();
+  }
+  ['vocations','features','cultural_roots','equipment'].forEach(renderList);
+
+  // Default tab
+  selectTab('chapters');
+  handleHash();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
